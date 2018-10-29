@@ -38,14 +38,77 @@ def publish_limb():
     #Initialize your node & publisher here.
     rospy.init_node("limb_mover", anonymous=True)
     left_command_pub = rospy.Publisher("/robot/limb/left/joint_command", JointCommand, queue_size=10)
-    rate = rospy.Rate(1)
+    rate = rospy.Rate(0.5)
 
     #Publish till your node is running
-    i = 0
     while not rospy.is_shutdown():
-        left_pub([i], ['left_w0'])
-        i += 0.1
+
+
+        # print('s0')
+        # left_pub([1], ['left_s0'])
+        # rate.sleep()
+
+        # print('s1')
+        # left_pub([0.0], ['left_s1'])
+        # rate.sleep()
+
+        # print('w1')
+        # left_pub([1.0], ['left_w2'])
+        # rate.sleep()
+
+        # print('s1')
+        # left_pub([-1], ['left_s1'])
+        # rate.sleep()
+
+        # print('s0')
+        # left_pub([-1], ['left_s0'])
+        # rate.sleep()
+
+        # print('s1')
+        # left_pub([0.0], ['left_s1'])
+        # rate.sleep()
+
+        # print('w1')
+        # left_pub([-1.0], ['left_w2'])
+        # rate.sleep()
+
+        # print('s1')
+        # left_pub([-1], ['left_s1'])
+        # rate.sleep()
+
+                print('s0')
+        left_pub([1], ['left_s0'])
         rate.sleep()
+
+        print('s1')
+        left_pub([0.0], ['left_s1'])
+        rate.sleep()
+
+        print('w1')
+        left_pub([1.0], ['left_w2'])
+        rate.sleep()
+
+        print('s1')
+        left_pub([-1], ['left_s1'])
+        rate.sleep()
+
+        print('s0')
+        left_pub([-1], ['left_s0'])
+        rate.sleep()
+
+        print('s1')
+        left_pub([0.0], ['left_s1'])
+        rate.sleep()
+
+        print('w1')
+        left_pub([-1.0], ['left_w2'])
+        rate.sleep()
+
+        print('s1')
+        left_pub([-1], ['left_s1'])
+        rate.sleep()
+
+
 
 
 def main():
