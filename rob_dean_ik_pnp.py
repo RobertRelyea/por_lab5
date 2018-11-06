@@ -33,6 +33,7 @@ Baxter RSDK Inverse Kinematics Example
 import argparse
 import struct
 import sys
+import pdb
 
 import rospy
 
@@ -44,52 +45,23 @@ from geometry_msgs.msg import (
 )
 from std_msgs.msg import Header
 
+import tf
+from baxter_core_msgs.msg import JointCommand
+
 from baxter_core_msgs.srv import (
     SolvePositionIK,
     SolvePositionIKRequest,
 )
 
+import baxter_interface
 
-def ik_test(limb):
-    rospy.init_node("rsdk_ik_service_client")
+right_command_pub = {}
+
+
+def ik_test(limb, poses):
     ns = "ExternalTools/" + limb + "/PositionKinematicsNode/IKService"
     iksvc = rospy.ServiceProxy(ns, SolvePositionIK)
     ikreq = SolvePositionIKRequest()
-    hdr = Header(stamp=rospy.Time.now(), frame_id='base')
-    poses = {
-        'left': PoseStamped(
-            header=hdr,
-            pose=Pose(
-                position=Point(
-                    x=0.7,
-                    y=0.15,
-                    z=-0.129,
-                ),
-                orientation=Quaternion(
-                    x=-0.0249590815779,
-                    y=0.999649402929,
-                    z=0.00737916180073,
-                    w=0.00486450832011
-                ),
-            ),
-        ),
-        'right': PoseStamped(
-            header=hdr,
-            pose=Pose(
-                position=Point(
-                    x=0.656982770038,
-                    y=-0.852598021641,
-                    z=0.0388609422173,
-                ),
-                orientation=Quaternion(
-                    x=0.367048116303,
-                    y=0.885911751787,
-                    z=-0.108908281936,
-                    w=0.261868353356,
-                ),
-            ),
-        ),
-    }
 
     ikreq.pose_stamp.append(poses[limb])
     try:
@@ -97,7 +69,7 @@ def ik_test(limb):
         resp = iksvc(ikreq)
     except (rospy.ServiceException, rospy.ROSException), e:
         rospy.logerr("Service call failed: %s" % (e,))
-        return 1
+        return 1, 0
 
     # Check if result valid, and type of seed ultimately used to get solution
     # convert rospy's string representation of uint8[]'s to int's
@@ -116,35 +88,88 @@ def ik_test(limb):
         print "\nIK Joint Solution:\n", limb_joints
         print "------------------"
         print "Response Message:\n", resp
+        return 0, resp
     else:
         print("INVALID POSE - No Valid Joint Solution Found.")
+        return 1, 0
 
-    return 0
+    return 1, 0
 
 
 def main():
-    """RSDK Inverse Kinematics Example
+    global right_command_pub
+    rospy.init_node("rsdk_ik_service_client")
+    right_command_pub = rospy.Publisher("/robot/limb/right/joint_command", JointCommand, queue_size=10)
+    
+    limb = baxter_interface.Limb("right")
+    gripper = baxter_interface.Gripper("right")
+    
+    #Calibrate your gripper here
+    gripper.calibrate()
 
-    A simple example of using the Rethink Inverse Kinematics
-    Service which returns the joint angles and validity for
-    a requested Cartesian Pose.
+    point1 = Point( x=0.7,
+                    y=-0.15,
+                    z=-0.129)
 
-    Run this example, passing the *limb* to test, and the
-    example will call the Service with a sample Cartesian
-    Pose, pre-defined in the example code, printing the
-    response of whether a valid joint solution was found,
-    and if so, the corresponding joint angles.
-    """
-    arg_fmt = argparse.RawDescriptionHelpFormatter
-    parser = argparse.ArgumentParser(formatter_class=arg_fmt,
-                                     description=main.__doc__)
-    parser.add_argument(
-        '-l', '--limb', choices=['left', 'right'], required=True,
-        help="the limb to test"
-    )
-    args = parser.parse_args(rospy.myargv()[1:])
+    point2 = Point( x=0.7,
+                    y=-0.15,
+                    z=0.1)
 
-    return ik_test(args.limb)
+    point3 = Point( x=0.7,
+                    y=-0.5,
+                    z=0.1)
+
+    point4 = Point( x=0.7,
+                    y=-0.5,
+                    z=-0.129)
+    gripper.open()
+    rospy.sleep(.2)
+    
+    while(not rospy.is_shutdown()):
+        move_joint(limb, point1)
+        rospy.sleep(.2)
+        gripper.close()
+        rospy.sleep(.1)
+        move_joint(limb, point2)
+        rospy.sleep(.2)
+        move_joint(limb, point3)
+        rospy.sleep(.2)
+        move_joint(limb, point4)
+        rospy.sleep(.2)
+        gripper.open()
+        rospy.sleep(.1)
+        move_joint(limb, point3)
+        rospy.sleep(.2)
+        move_joint(limb, point2)
+        rospy.sleep(.2)
+
+
+def move_joint(limb, point):
+
+    hdr = Header(stamp=rospy.Time.now(), frame_id='base')
+
+    quat = Quaternion( x=-0.0249590815779,
+                       y=0.999649402929,
+                       z=0.00737916180073,
+                       w=0.00486450832011)
+
+    poses = {
+        'right': PoseStamped(
+            header=hdr,
+            pose=Pose(
+                position=point,
+                orientation=quat
+            ),
+        ),
+    }
+
+
+    success, resp = ik_test("right", poses)
+    if success == 0:
+        joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
+        limb.move_to_joint_positions(joints)
+        print("commanded")
+
 
 if __name__ == '__main__':
     sys.exit(main())

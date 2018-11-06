@@ -43,40 +43,7 @@ def publish_limb():
     #Publish till your node is running
     while not rospy.is_shutdown():
 
-
-        # print('s0')
-        # left_pub([1], ['left_s0'])
-        # rate.sleep()
-
-        # print('s1')
-        # left_pub([0.0], ['left_s1'])
-        # rate.sleep()
-
-        # print('w1')
-        # left_pub([1.0], ['left_w2'])
-        # rate.sleep()
-
-        # print('s1')
-        # left_pub([-1], ['left_s1'])
-        # rate.sleep()
-
-        # print('s0')
-        # left_pub([-1], ['left_s0'])
-        # rate.sleep()
-
-        # print('s1')
-        # left_pub([0.0], ['left_s1'])
-        # rate.sleep()
-
-        # print('w1')
-        # left_pub([-1.0], ['left_w2'])
-        # rate.sleep()
-
-        # print('s1')
-        # left_pub([-1], ['left_s1'])
-        # rate.sleep()
-
-                print('s0')
+        print('s0')
         left_pub([1], ['left_s0'])
         rate.sleep()
 
